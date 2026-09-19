@@ -49,10 +49,7 @@ button{
     padding-bottom:80px;
 }
 
-/* =========================
-   HEADER
-========================= */
-
+/* HEADER */
 .topbar{
     position:sticky;
     top:0;
@@ -98,20 +95,14 @@ button{
     background:var(--turquesa-light);
 }
 
-/* =========================
-   MAIN
-========================= */
-
+/* MAIN */
 .container{
     width:100%;
     max-width:680px;
     margin:auto;
 }
 
-/* =========================
-   STORIES
-========================= */
-
+/* STORIES */
 .stories{
     display:flex;
     gap:14px;
@@ -166,10 +157,7 @@ button{
     font-weight:bold;
 }
 
-/* =========================
-   POST
-========================= */
-
+/* POST */
 .post{
     background:var(--blanco);
     margin:12px 0;
@@ -293,10 +281,7 @@ button{
     margin-top:8px;
 }
 
-/* =========================
-   EMPTY
-========================= */
-
+/* EMPTY */
 .empty{
     text-align:center;
     padding:70px 25px;
@@ -308,10 +293,7 @@ button{
     margin-bottom:15px;
 }
 
-/* =========================
-   BOTTOM NAV
-========================= */
-
+/* BOTTOM NAV */
 .bottom-nav{
     position:fixed;
     bottom:0;
@@ -362,10 +344,7 @@ button{
     font-size:25px;
 }
 
-/* =========================
-   PROFILE
-========================= */
-
+/* PROFILE */
 .profile{
     display:none;
     background:var(--blanco);
@@ -484,10 +463,7 @@ button{
     font-size:18px;
 }
 
-/* =========================
-   MODALS
-========================= */
-
+/* MODALS */
 .overlay{
     position:fixed;
     inset:0;
@@ -560,16 +536,6 @@ textarea.input{
     font-size:15px;
 }
 
-.secondary-btn{
-    width:100%;
-    padding:14px;
-    background:var(--gris-claro);
-    color:var(--texto);
-    border-radius:12px;
-    font-weight:bold;
-    margin-top:8px;
-}
-
 .file-label{
     width:100%;
     min-height:180px;
@@ -610,10 +576,7 @@ textarea.input{
     margin-bottom:15px;
 }
 
-/* =========================
-   PROFILE MENU
-========================= */
-
+/* PROFILE MENU */
 .profile-menu{
     display:flex;
     flex-direction:column;
@@ -632,14 +595,7 @@ textarea.input{
     background:var(--turquesa-light);
 }
 
-.menu-option.danger{
-    color:#d94e64;
-}
-
-/* =========================
-   COMMENTS
-========================= */
-
+/* COMMENTS */
 .comment-list{
     max-height:330px;
     overflow:auto;
@@ -676,10 +632,7 @@ textarea.input{
     font-size:13px;
 }
 
-/* =========================
-   SEARCH
-========================= */
-
+/* SEARCH */
 .search-page{
     display:none;
     padding:18px;
@@ -713,10 +666,7 @@ textarea.input{
     object-fit:cover;
 }
 
-/* =========================
-   NOTIFICATIONS
-========================= */
-
+/* NOTIFICATIONS */
 .notifications{
     display:none;
     padding:20px;
@@ -729,10 +679,7 @@ textarea.input{
     margin-bottom:8px;
 }
 
-/* =========================
-   DARK MODE
-========================= */
-
+/* DARK MODE */
 body.dark{
     --crema:#171311;
     --blanco:#211c19;
@@ -756,17 +703,10 @@ body.dark .notification{
     color:white;
 }
 
-body.dark .profile{
-    background:#211c19;
-}
-
+body.dark .profile,
 body.dark .stories{
     background:#211c19;
 }
-
-/* =========================
-   DESKTOP
-========================= */
 
 @media(min-width:800px){
     .bottom-nav{
@@ -805,14 +745,12 @@ body.dark .stories{
     </div>
 </header>
 
-
 <main class="container">
 
 <!-- HOME -->
 <section id="homePage">
 
     <div class="stories">
-
         <div class="story add-story" onclick="openStoryUpload()">
             <div class="story-avatar">
                 <img id="storyMyAvatar" src="">
@@ -820,82 +758,55 @@ body.dark .stories{
             <div class="plus-story">+</div>
             Tu historia
         </div>
-
         <div class="story">
-            <div class="story-avatar">
-                <img src="https://i.pravatar.cc/100?img=12">
-            </div>
+            <div class="story-avatar"><img src="https://i.pravatar.cc/100?img=12"></div>
             Ana
         </div>
-
         <div class="story">
-            <div class="story-avatar">
-                <img src="https://i.pravatar.cc/100?img=32">
-            </div>
+            <div class="story-avatar"><img src="https://i.pravatar.cc/100?img=32"></div>
             Mateo
         </div>
-
         <div class="story">
-            <div class="story-avatar">
-                <img src="https://i.pravatar.cc/100?img=47">
-            </div>
+            <div class="story-avatar"><img src="https://i.pravatar.cc/100?img=47"></div>
             Sofía
         </div>
-
         <div class="story">
-            <div class="story-avatar">
-                <img src="https://i.pravatar.cc/100?img=5">
-            </div>
+            <div class="story-avatar"><img src="https://i.pravatar.cc/100?img=5"></div>
             Lucas
         </div>
-
     </div>
 
     <div id="feed"></div>
 
 </section>
 
-
 <!-- SEARCH -->
 <section id="searchPage" class="search-page">
-
     <div class="search-box">
         <input id="searchInput" class="input" placeholder="Buscar personas..." oninput="searchUsers()">
         <button class="primary-btn" style="width:55px" onclick="closePages()">×</button>
     </div>
-
     <div id="searchResults"></div>
-
 </section>
-
 
 <!-- NOTIFICATIONS -->
 <section id="notificationsPage" class="notifications">
-
     <h2 style="margin-bottom:15px">Actividad</h2>
-
     <div id="notificationsList"></div>
-
 </section>
-
 
 <!-- PROFILE -->
 <section id="profilePage" class="profile">
-
     <div class="profile-top">
-
         <div class="profile-main">
-
             <div class="profile-photo-wrap">
                 <img id="profilePhoto" class="profile-photo" src="">
                 <button class="profile-photo-edit" onclick="changeProfilePhoto()">✎</button>
             </div>
-
             <div>
                 <div id="profileName" class="profile-name"></div>
                 <div id="profileHandle" class="profile-handle"></div>
             </div>
-
         </div>
 
         <div class="stats">
@@ -903,12 +814,10 @@ body.dark .stories{
                 <strong id="postCount">0</strong>
                 <span>Publicaciones</span>
             </div>
-
             <div class="stat">
                 <strong>0</strong>
                 <span>Seguidores</span>
             </div>
-
             <div class="stat">
                 <strong>0</strong>
                 <span>Siguiendo</span>
@@ -919,246 +828,115 @@ body.dark .stories{
             <button class="profile-btn primary" onclick="openProfileMenu()">
                 Editar perfil
             </button>
-
             <button class="profile-btn" onclick="openSettings()">
                 ⚙️
             </button>
         </div>
-
     </div>
 
     <div id="profileGrid" class="profile-grid"></div>
-
 </section>
 
 </main>
 
-
 <!-- BOTTOM NAVIGATION -->
-
 <nav class="bottom-nav">
-
     <button class="nav-item active" onclick="showHome()">
-        <span>⌂</span>
-        Inicio
+        <span>⌂</span> Inicio
     </button>
-
     <button class="nav-item" onclick="openSearch()">
-        <span>⌕</span>
-        Buscar
+        <span>⌕</span> Buscar
     </button>
-
     <button class="nav-item create-nav" onclick="openCreatePost()">
-        <span>+</span>
-        Crear
+        <span>+</span> Crear
     </button>
-
     <button class="nav-item" onclick="openNotifications()">
-        <span>♡</span>
-        Actividad
+        <span>♡</span> Actividad
     </button>
-
     <button class="nav-item" onclick="showProfile()">
-        <span>◉</span>
-        Perfil
+        <span>◉</span> Perfil
     </button>
-
 </nav>
 
 </div>
 
-
-<!-- =========================
-     CREATE POST MODAL
-========================= -->
-
+<!-- CREATE POST MODAL -->
 <div id="createOverlay" class="overlay">
-
     <div class="modal">
-
         <button class="close" onclick="closeModal('createOverlay')">×</button>
-
         <h2>Crear publicación</h2>
 
         <label class="file-label" for="mediaInput">
-
             <div class="big">📸</div>
-
             <strong>Seleccionar desde tu galería</strong>
-
             <span style="color:#777;margin-top:7px">
                 Elige una foto o video de tu teléfono
             </span>
-
         </label>
 
-        <input
-            id="mediaInput"
-            type="file"
-            accept="image/*,video/*"
-            onchange="previewMedia(event)"
-        >
-
+        <input id="mediaInput" type="file" accept="image/*,video/*" onchange="previewMedia(event)">
         <img id="imagePreview" class="preview">
-
         <video id="videoPreview" class="preview" controls></video>
 
-        <textarea
-            id="captionInput"
-            class="input"
-            placeholder="Escribe algo sobre tu publicación..."
-        ></textarea>
-
-        <button class="primary-btn" onclick="createPost()">
-            Publicar
-        </button>
-
+        <textarea id="captionInput" class="input" placeholder="Escribe algo sobre tu publicación..."></textarea>
+        <button class="primary-btn" onclick="createPost()">Publicar</button>
     </div>
-
 </div>
 
-
-<!-- =========================
-     PROFILE MENU
-========================= -->
-
+<!-- PROFILE MENU -->
 <div id="profileMenuOverlay" class="overlay">
-
     <div class="modal">
-
         <button class="close" onclick="closeModal('profileMenuOverlay')">×</button>
-
         <h2>Mi perfil</h2>
-
         <div class="profile-menu">
-
-            <button class="menu-option" onclick="changeProfilePhoto()">
-                📷 Cambiar foto de perfil
-            </button>
-
-            <button class="menu-option" onclick="changeUsername()">
-                ✏️ Cambiar nombre de usuario
-            </button>
-
-            <button class="menu-option" onclick="openSettings()">
-                ⚙️ Configuración
-            </button>
-
-            <button class="menu-option" onclick="toggleDarkMode()">
-                🌙 Cambiar apariencia
-            </button>
-
+            <button class="menu-option" onclick="changeProfilePhoto()">📷 Cambiar foto de perfil</button>
+            <button class="menu-option" onclick="changeUsername()">✏️ Cambiar nombre de usuario</button>
+            <button class="menu-option" onclick="openSettings()">⚙️ Configuración</button>
+            <button class="menu-option" onclick="toggleDarkMode()">🌙 Cambiar apariencia</button>
         </div>
-
     </div>
-
 </div>
 
-
-<!-- =========================
-     CHANGE USERNAME
-========================= -->
-
+<!-- CHANGE USERNAME -->
 <div id="usernameOverlay" class="overlay">
-
     <div class="modal">
-
         <button class="close" onclick="closeModal('usernameOverlay')">×</button>
-
         <h2>Cambiar nombre de usuario</h2>
-
-        <input
-            id="usernameInput"
-            class="input"
-            placeholder="Nuevo nombre de usuario"
-            maxlength="25"
-        >
-
-        <button class="primary-btn" onclick="saveUsername()">
-            Guardar
-        </button>
-
+        <input id="usernameInput" class="input" placeholder="Nuevo nombre de usuario" maxlength="25">
+        <button class="primary-btn" onclick="saveUsername()">Guardar</button>
     </div>
-
 </div>
 
+<input id="profileInput" type="file" accept="image/*" onchange="saveProfilePhoto(event)">
 
-<!-- =========================
-     PROFILE PHOTO INPUT
-========================= -->
-
-<input
-    id="profileInput"
-    type="file"
-    accept="image/*"
-    onchange="saveProfilePhoto(event)"
->
-
-
-<!-- =========================
-     COMMENTS
-========================= -->
-
+<!-- COMMENTS -->
 <div id="commentsOverlay" class="overlay">
-
     <div class="modal">
-
         <button class="close" onclick="closeModal('commentsOverlay')">×</button>
-
         <h2>Comentarios</h2>
-
         <div id="commentList" class="comment-list"></div>
-
-        <input
-            id="commentInput"
-            class="input"
-            placeholder="Escribe un comentario..."
-            maxlength="300"
-        >
-
-        <button class="primary-btn" onclick="addComment()">
-            Comentar
-        </button>
-
+        <input id="commentInput" class="input" placeholder="Escribe un comentario..." maxlength="300">
+        <button class="primary-btn" onclick="addComment()">Comentar</button>
     </div>
-
 </div>
 
-
-<!-- =========================
-     SETTINGS
-========================= -->
-
+<!-- SETTINGS -->
 <div id="settingsOverlay" class="overlay">
-
     <div class="modal">
-
         <button class="close" onclick="closeModal('settingsOverlay')">×</button>
-
         <h2>Configuración</h2>
-
-        <button class="menu-option" onclick="toggleDarkMode();closeModal('settingsOverlay')">
-            🌙 Apariencia
-        </button>
-
-        <button class="menu-option" onclick="clearLocalData()">
-            🗑️ Borrar datos locales
-        </button>
-
+        <button class="menu-option" onclick="toggleDarkMode();closeModal('settingsOverlay')">🌙 Apariencia</button>
+        <button class="menu-option" onclick="clearLocalData()">🗑️ Borrar datos locales</button>
         <p style="color:#777;font-size:12px;margin-top:15px;line-height:1.5">
-            Las publicaciones, imágenes y videos se guardan en Firebase
-            para que puedan verse por todos los usuarios.
+            Las publicaciones, imágenes y videos se guardan en Firebase Firestore y Cloudinary para que puedan verse por todos los usuarios.
         </p>
-
     </div>
-
 </div>
-
 
 <script type="module">
 
 /* =========================================================
-   FIREBASE — PUBLICACIONES COMPARTIDAS ENTRE USUARIOS
+   FIREBASE & CLOUDINARY CONFIGURATION
 ========================================================= */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
@@ -1185,13 +963,6 @@ import {
     runTransaction,
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import {
-    getStorage,
-    ref,
-    uploadBytes,
-    getDownloadURL,
-    deleteObject
-} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-storage.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBlfv0pZJ4G68rDMaSNG_S2EGOptBVae_E",
@@ -1206,7 +977,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const storage = getStorage(app);
+
+// Configuración de Cloudinary
+const CLOUDINARY_CLOUD_NAME = "663132117874317";
+const CLOUDINARY_UPLOAD_PRESET = "ml_default"; 
 
 const DEFAULT_AVATAR = "https://i.pravatar.cc/200?img=68";
 
@@ -1215,10 +989,7 @@ let currentUser = null;
 let posts = [];
 let unsubscribePosts = null;
 
-/* =========================================================
-   INICIO
-========================================================= */
-
+/* INICIO */
 document.addEventListener("DOMContentLoaded", () => {
     loadDarkMode();
     startFirebase();
@@ -1231,7 +1002,7 @@ async function startFirebase(){
         }
     }catch(error){
         console.error(error);
-        alert("No se pudo iniciar sesión con Firebase. Activa el acceso anónimo en Firebase Authentication.");
+        alert("No se pudo iniciar sesión en Firebase. Activa 'Anonymous Auth' en Firebase Console.");
     }
 }
 
@@ -1265,15 +1036,10 @@ onAuthStateChanged(auth, async (user) => {
         subscribeToPosts();
     }catch(error){
         console.error(error);
-        alert("Firebase inició sesión, pero no se pudo cargar el perfil.");
     }
 });
 
-/* =========================================================
-   ESCUCHAR PUBLICACIONES EN TIEMPO REAL
-   Todos los usuarios reciben las publicaciones de Firebase.
-========================================================= */
-
+/* ESCUCHAR PUBLICACIONES EN TIEMPO REAL */
 function subscribeToPosts(){
     if(unsubscribePosts) unsubscribePosts();
 
@@ -1291,28 +1057,47 @@ function subscribeToPosts(){
         renderFeed();
         renderProfile();
     }, (error) => {
-        console.error(error);
-        alert("No se pudieron cargar las publicaciones. Revisa Firestore y sus reglas.");
+        console.error("Error al cargar posts:", error);
     });
 }
 
-/* =========================================================
-   PERFIL
-========================================================= */
-
 function updateUserInterface(){
     if(!currentUser) return;
-
     document.getElementById("profilePhoto").src = currentUser.photo || DEFAULT_AVATAR;
     document.getElementById("storyMyAvatar").src = currentUser.photo || DEFAULT_AVATAR;
     document.getElementById("profileName").textContent = currentUser.username || "usuario";
     document.getElementById("profileHandle").textContent = "@" + (currentUser.username || "usuario");
 }
 
-/* =========================================================
-   CREAR PUBLICACIÓN
-========================================================= */
+/* SUBIR A CLOUDINARY */
+async function uploadToCloudinary(file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
 
+    const isVideo = file.type.startsWith("video/");
+    const resourceType = isVideo ? "video" : "image";
+
+    const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`,
+        {
+            method: "POST",
+            body: formData
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error("Error al subir archivo a Cloudinary");
+    }
+
+    const data = await response.json();
+    return {
+        url: data.secure_url,
+        mediaType: resourceType
+    };
+}
+
+/* CREAR PUBLICACIÓN */
 function openCreatePost(){
     document.getElementById("createOverlay").classList.add("show");
 }
@@ -1338,77 +1123,9 @@ function previewMedia(event){
     }
 }
 
-function compressImage(file){
-    return new Promise((resolve,reject)=>{
-        const reader = new FileReader();
-
-        reader.onload = function(event){
-            const img = new Image();
-
-            img.onload = function(){
-                const maxWidth = 1200;
-                let width = img.width;
-                let height = img.height;
-
-                if(width > maxWidth){
-                    height = height * maxWidth / width;
-                    width = maxWidth;
-                }
-
-                const canvas = document.createElement("canvas");
-                canvas.width = width;
-                canvas.height = height;
-
-                const ctx = canvas.getContext("2d");
-                ctx.drawImage(img,0,0,width,height);
-
-                canvas.toBlob(blob => {
-                    if(blob) resolve(blob);
-                    else reject(new Error("No se pudo comprimir la imagen."));
-                }, "image/jpeg", .82);
-            };
-
-            img.onerror = reject;
-            img.src = event.target.result;
-        };
-
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
-}
-
-async function uploadMedia(file, folder){
-    const extension = file.name.includes(".")
-        ? file.name.split(".").pop().toLowerCase()
-        : "bin";
-
-    const path = `${folder}/${currentUser.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${extension}`;
-    const storageRef = ref(storage, path);
-
-    let uploadFile = file;
-    let contentType = file.type;
-
-    if(file.type.startsWith("image/")){
-        uploadFile = await compressImage(file);
-        contentType = "image/jpeg";
-    }
-
-    await uploadBytes(storageRef, uploadFile, {
-        contentType
-    });
-
-    const url = await getDownloadURL(storageRef);
-
-    return {
-        url,
-        path,
-        mediaType: file.type.startsWith("video/") ? "video" : "image"
-    };
-}
-
 async function createPost(){
     if(!currentUser){
-        alert("Espera un momento mientras se conecta Firebase.");
+        alert("Conectando con el servidor...");
         return;
     }
 
@@ -1417,29 +1134,23 @@ async function createPost(){
     const caption = document.getElementById("captionInput").value.trim();
 
     if(!file){
-        alert("Primero selecciona una foto o video.");
-        return;
-    }
-
-    if(file.size > 100 * 1024 * 1024){
-        alert("El archivo es demasiado grande. Usa un archivo de menos de 100 MB.");
+        alert("Por favor, selecciona una foto o video.");
         return;
     }
 
     const button = document.querySelector("#createOverlay .primary-btn");
     const originalText = button.textContent;
     button.disabled = true;
-    button.textContent = "Subiendo...";
+    button.textContent = "Subiendo a Cloudinary...";
 
     try{
-        const uploaded = await uploadMedia(file, "posts");
+        const uploaded = await uploadToCloudinary(file);
 
         await addDoc(collection(db, "posts"), {
             userId: currentUser.id,
             username: currentUser.username,
             userPhoto: currentUser.photo || DEFAULT_AVATAR,
             media: uploaded.url,
-            storagePath: uploaded.path,
             mediaType: uploaded.mediaType,
             caption,
             likes: 0,
@@ -1457,17 +1168,14 @@ async function createPost(){
 
     }catch(error){
         console.error(error);
-        alert("No se pudo publicar. Revisa que Firestore y Storage estén activados en Firebase.");
+        alert("Error al crear la publicación. Verifica que tu preset de Cloudinary esté creado como Unsigned.");
     }finally{
         button.disabled = false;
         button.textContent = originalText;
     }
 }
 
-/* =========================================================
-   FEED
-========================================================= */
-
+/* FEED */
 function renderFeed(){
     const feed = document.getElementById("feed");
 
@@ -1476,7 +1184,6 @@ function renderFeed(){
             <div class="empty">
                 <div class="empty-icon">☁️</div>
                 <h2>Conectando...</h2>
-                <p style="margin-top:8px">Conectando con Cube o Dos.</p>
             </div>`;
         return;
     }
@@ -1498,7 +1205,6 @@ function renderFeed(){
 function createPostHTML(post){
     const liked = Array.isArray(post.likeUserIds) && post.likeUserIds.includes(currentUser?.id);
     const reacted = Array.isArray(post.reactionUserIds) && post.reactionUserIds.includes(currentUser?.id);
-    const isOwner = post.userId === currentUser?.id;
     const comments = Array.isArray(post.comments) ? post.comments : [];
     const media = post.mediaType === "video"
         ? `<video src="${post.media}" controls playsinline preload="metadata"></video>`
@@ -1558,10 +1264,7 @@ function createPostHTML(post){
         </article>`;
 }
 
-/* =========================================================
-   ME GUSTA Y REACCIONES — POR USUARIO
-========================================================= */
-
+/* LIKES & REACCIONES */
 async function toggleLike(id){
     if(!currentUser) return;
     const postRef = doc(db,"posts",id);
@@ -1608,10 +1311,7 @@ async function toggleReaction(id){
     }
 }
 
-/* =========================================================
-   COMENTARIOS
-========================================================= */
-
+/* COMENTARIOS */
 function openComments(id){
     currentCommentPostId = id;
     const post = posts.find(p => p.id === id);
@@ -1661,10 +1361,7 @@ async function addComment(){
     }
 }
 
-/* =========================================================
-   VISTAS
-========================================================= */
-
+/* VISTAS */
 function startViewTimers(){
     document.querySelectorAll("[data-view-post]").forEach(element => {
         const id = element.dataset.viewPost;
@@ -1674,7 +1371,7 @@ function startViewTimers(){
             entries.forEach(entry => {
                 if(entry.isIntersecting && !timerStarted){
                     timerStarted = true;
-                    setTimeout(() => registerView(id),5000);
+                    setTimeout(() => registerView(id), 5000);
                 }
             });
         }, {threshold:.6});
@@ -1707,10 +1404,7 @@ async function registerView(id){
     }
 }
 
-/* =========================================================
-   ELIMINAR PUBLICACIÓN
-========================================================= */
-
+/* ELIMINAR PUBLICACIÓN */
 async function deletePost(id){
     const post = posts.find(p => p.id === id);
     if(!post) return;
@@ -1724,14 +1418,6 @@ async function deletePost(id){
 
     try{
         await deleteDoc(doc(db,"posts",id));
-
-        if(post.storagePath){
-            try{
-                await deleteObject(ref(storage,post.storagePath));
-            }catch(storageError){
-                console.warn("El documento se eliminó, pero el archivo de Storage no pudo eliminarse.", storageError);
-            }
-        }
     }catch(error){
         console.error(error);
         alert("No se pudo eliminar la publicación.");
@@ -1749,10 +1435,7 @@ function postOptions(id){
     }
 }
 
-/* =========================================================
-   CAMBIAR FOTO DE PERFIL
-========================================================= */
-
+/* FOTO DE PERFIL CON CLOUDINARY */
 function changeProfilePhoto(){
     closeModal("profileMenuOverlay");
     document.getElementById("profileInput").click();
@@ -1762,14 +1445,8 @@ async function saveProfilePhoto(event){
     const file = event.target.files[0];
     if(!file || !currentUser) return;
 
-    if(!file.type.startsWith("image/")){
-        alert("Selecciona una imagen.");
-        return;
-    }
-
     try{
-        const uploaded = await uploadMedia(file,"profiles");
-        const oldPhoto = currentUser.photo;
+        const uploaded = await uploadToCloudinary(file);
 
         await updateDoc(doc(db,"users",currentUser.id), {
             photo: uploaded.url
@@ -1777,16 +1454,12 @@ async function saveProfilePhoto(event){
 
         currentUser.photo = uploaded.url;
 
-        /* Actualiza las publicaciones del usuario para que su foto cambie también. */
         const ownPosts = posts.filter(p => p.userId === currentUser.id);
         await Promise.all(ownPosts.map(p =>
             updateDoc(doc(db,"posts",p.id),{userPhoto:uploaded.url})
         ));
 
         updateUserInterface();
-
-        /* No borramos la foto anterior automáticamente porque puede estar en caché. */
-        void oldPhoto;
     }catch(error){
         console.error(error);
         alert("No se pudo cambiar la foto de perfil.");
@@ -1795,10 +1468,7 @@ async function saveProfilePhoto(event){
     }
 }
 
-/* =========================================================
-   CAMBIAR NOMBRE DE USUARIO
-========================================================= */
-
+/* CAMBIAR NOMBRE DE USUARIO */
 function changeUsername(){
     closeModal("profileMenuOverlay");
     document.getElementById("usernameInput").value = currentUser.username;
@@ -1836,10 +1506,7 @@ async function saveUsername(){
     }
 }
 
-/* =========================================================
-   PERFIL
-========================================================= */
-
+/* PERFIL Y NAVEGACIÓN */
 function renderProfile(){
     if(!currentUser) return;
 
@@ -1860,10 +1527,6 @@ function renderProfile(){
                 : `<img src="${post.media}">`}
         </div>`).join("");
 }
-
-/* =========================================================
-   NAVEGACIÓN
-========================================================= */
 
 function hideAllPages(){
     document.getElementById("homePage").style.display = "none";
@@ -1908,11 +1571,6 @@ function setActiveNav(index){
     if(buttons[index]) buttons[index].classList.add("active");
 }
 
-/* =========================================================
-   BÚSQUEDA
-   Se mantiene la búsqueda visual existente.
-========================================================= */
-
 function searchUsers(){
     const queryText = document.getElementById("searchInput").value.toLowerCase().trim();
 
@@ -1936,22 +1594,13 @@ function searchUsers(){
             </div>`).join("");
 }
 
-/* =========================================================
-   NOTIFICACIONES
-========================================================= */
-
 function renderNotifications(){
     document.getElementById("notificationsList").innerHTML = `
         <div class="notification">💙 Bienvenido a Cube o Dos.</div>
-        <div class="notification">📸 Puedes crear una publicación desde tu galería.</div>
-        <div class="notification">☁️ Tus publicaciones ahora se guardan en Firebase y pueden verse desde otros dispositivos.</div>
-        <div class="notification">👁️ Una publicación cuenta una vista después de 5 segundos.</div>
+        <div class="notification">📸 Tus fotos y videos suben directo a Cloudinary.</div>
+        <div class="notification">☁️ Tus datos están en sincronía con Firebase Firestore.</div>
     `;
 }
-
-/* =========================================================
-   AJUSTES
-========================================================= */
 
 function openProfileMenu(){
     document.getElementById("profileMenuOverlay").classList.add("show");
@@ -1973,17 +1622,9 @@ function loadDarkMode(){
     }
 }
 
-/* =========================================================
-   HISTORIAS — BASE
-========================================================= */
-
 function openStoryUpload(){
-    alert("Las historias todavía son una función de base. Las publicaciones normales ya se guardan en Firebase para todos los usuarios.");
+    alert("Función de historias en desarrollo.");
 }
-
-/* =========================================================
-   COMPARTIR
-========================================================= */
 
 async function sharePost(id){
     const post = posts.find(p => p.id === id);
@@ -2006,10 +1647,6 @@ async function sharePost(id){
     }
 }
 
-/* =========================================================
-   SCROLL A POST
-========================================================= */
-
 function scrollToPost(id){
     showHome();
     setTimeout(() => {
@@ -2018,17 +1655,9 @@ function scrollToPost(id){
     },100);
 }
 
-/* =========================================================
-   MODALES
-========================================================= */
-
 function closeModal(id){
     document.getElementById(id).classList.remove("show");
 }
-
-/* =========================================================
-   SEGURIDAD HTML
-========================================================= */
 
 function escapeHTML(text){
     return String(text ?? "")
@@ -2038,10 +1667,6 @@ function escapeHTML(text){
         .replace(/"/g,"&quot;")
         .replace(/'/g,"&#039;");
 }
-
-/* =========================================================
-   FECHA DE FIRESTORE
-========================================================= */
 
 function formatDate(timestamp){
     let time = Date.now();
@@ -2067,21 +1692,11 @@ function formatDate(timestamp){
     return `Hace ${days} día${days === 1 ? "" : "s"}`;
 }
 
-/* =========================================================
-   BORRAR DATOS LOCALES
-   Las publicaciones ya no dependen de localStorage.
-========================================================= */
-
 function clearLocalData(){
-    if(!confirm("Esto solo eliminará preferencias locales de este navegador. Las publicaciones de Firebase NO se eliminarán. ¿Continuar?")) return;
-
+    if(!confirm("¿Eliminar preferencias locales de este navegador?")) return;
     localStorage.removeItem("brisaDarkMode");
     location.reload();
 }
-
-/* =========================================================
-   EVENTOS DE LOS MODALES
-========================================================= */
 
 document.querySelectorAll(".overlay").forEach(overlay => {
     overlay.addEventListener("click",function(event){
@@ -2105,7 +1720,6 @@ document.getElementById("usernameInput").addEventListener("keydown",function(eve
     }
 });
 
-/* Exponer funciones usadas por onclick del HTML. */
 Object.assign(window, {
     openStoryUpload, openCreatePost, previewMedia, createPost,
     openProfileMenu, changeProfilePhoto, changeUsername, openSettings,
@@ -2118,4 +1732,4 @@ Object.assign(window, {
 </script>
 
 </body>
-              </html>
+</html>
