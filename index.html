@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-<title>Brisa - Red Social</title>
+<title>Cube o Dos - Red Social</title>
 
 <style>
 :root{
@@ -796,7 +796,7 @@ body.dark .stories{
 
 <!-- HEADER -->
 <header class="topbar">
-    <div class="logo">Brisa<span>+</span></div>
+    <div class="logo">Cube o Dos<span>+</span></div>
 
     <div class="header-actions">
         <button class="icon-btn" onclick="openSearch()">⌕</button>
@@ -1146,8 +1146,8 @@ body.dark .stories{
         </button>
 
         <p style="color:#777;font-size:12px;margin-top:15px;line-height:1.5">
-            En esta versión de demostración, la información se guarda
-            localmente en este navegador.
+            Las publicaciones, imágenes y videos se guardan en Firebase
+            para que puedan verse por todos los usuarios.
         </p>
 
     </div>
@@ -1155,103 +1155,170 @@ body.dark .stories{
 </div>
 
 
-<script>
+<script type="module">
 
 /* =========================================================
-   DATOS DE LA APLICACIÓN
+   FIREBASE — PUBLICACIONES COMPARTIDAS ENTRE USUARIOS
 ========================================================= */
 
-const DEFAULT_AVATAR =
-    "https://i.pravatar.cc/200?img=68";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+import {
+    getAuth,
+    signInAnonymously,
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+import {
+    getFirestore,
+    collection,
+    doc,
+    getDoc,
+    setDoc,
+    addDoc,
+    deleteDoc,
+    onSnapshot,
+    query,
+    orderBy,
+    updateDoc,
+    arrayUnion,
+    arrayRemove,
+    increment,
+    runTransaction,
+    serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import {
+    getStorage,
+    ref,
+    uploadBytes,
+    getDownloadURL,
+    deleteObject
+} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-storage.js";
 
-let currentCommentPostId = null;
-
-let currentUser = JSON.parse(
-    localStorage.getItem("brisaUser")
-) || {
-    id: "user-" + Date.now(),
-    username: "usuario_nuevo",
-    photo: DEFAULT_AVATAR
+const firebaseConfig = {
+    apiKey: "AIzaSyBlfv0pZJ4G68rDMaSNG_S2EGOptBVae_E",
+    authDomain: "mi-red-a687d.firebaseapp.com",
+    projectId: "mi-red-a687d",
+    storageBucket: "mi-red-a687d.firebasestorage.app",
+    messagingSenderId: "9017246628",
+    appId: "1:9017246628:web:175a4126dfa4d3e5627731",
+    measurementId: "G-1KK0C750BQ"
 };
 
-let posts = JSON.parse(
-    localStorage.getItem("brisaPosts")
-) || [];
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
+const DEFAULT_AVATAR = "https://i.pravatar.cc/200?img=68";
 
-/* =========================================================
-   GUARDAR DATOS
-========================================================= */
-
-function saveData(){
-
-    localStorage.setItem(
-        "brisaUser",
-        JSON.stringify(currentUser)
-    );
-
-    localStorage.setItem(
-        "brisaPosts",
-        JSON.stringify(posts)
-    );
-
-}
-
+let currentCommentPostId = null;
+let currentUser = null;
+let posts = [];
+let unsubscribePosts = null;
 
 /* =========================================================
-   INICIALIZACIÓN
+   INICIO
 ========================================================= */
 
-document.addEventListener("DOMContentLoaded",function(){
-
-    updateUserInterface();
-
-    renderFeed();
-
-    renderProfile();
-
+document.addEventListener("DOMContentLoaded", () => {
     loadDarkMode();
-
+    startFirebase();
 });
 
+async function startFirebase(){
+    try{
+        if(!auth.currentUser){
+            await signInAnonymously(auth);
+        }
+    }catch(error){
+        console.error(error);
+        alert("No se pudo iniciar sesión con Firebase. Activa el acceso anónimo en Firebase Authentication.");
+    }
+}
+
+onAuthStateChanged(auth, async (user) => {
+    if(!user) return;
+
+    try{
+        const userRef = doc(db, "users", user.uid);
+        const snap = await getDoc(userRef);
+
+        if(snap.exists()){
+            currentUser = {
+                id: user.uid,
+                ...snap.data()
+            };
+        }else{
+            currentUser = {
+                id: user.uid,
+                username: "usuario_" + user.uid.substring(0,6),
+                photo: DEFAULT_AVATAR
+            };
+
+            await setDoc(userRef, {
+                username: currentUser.username,
+                photo: currentUser.photo,
+                createdAt: serverTimestamp()
+            });
+        }
+
+        updateUserInterface();
+        subscribeToPosts();
+    }catch(error){
+        console.error(error);
+        alert("Firebase inició sesión, pero no se pudo cargar el perfil.");
+    }
+});
 
 /* =========================================================
-   ACTUALIZAR PERFIL
+   ESCUCHAR PUBLICACIONES EN TIEMPO REAL
+   Todos los usuarios reciben las publicaciones de Firebase.
+========================================================= */
+
+function subscribeToPosts(){
+    if(unsubscribePosts) unsubscribePosts();
+
+    const q = query(
+        collection(db, "posts"),
+        orderBy("createdAt", "desc")
+    );
+
+    unsubscribePosts = onSnapshot(q, (snapshot) => {
+        posts = snapshot.docs.map(d => ({
+            id: d.id,
+            ...d.data()
+        }));
+
+        renderFeed();
+        renderProfile();
+    }, (error) => {
+        console.error(error);
+        alert("No se pudieron cargar las publicaciones. Revisa Firestore y sus reglas.");
+    });
+}
+
+/* =========================================================
+   PERFIL
 ========================================================= */
 
 function updateUserInterface(){
+    if(!currentUser) return;
 
-    document.getElementById("profilePhoto").src =
-        currentUser.photo;
-
-    document.getElementById("storyMyAvatar").src =
-        currentUser.photo;
-
-    document.getElementById("profileName").textContent =
-        currentUser.username;
-
-    document.getElementById("profileHandle").textContent =
-        "@" + currentUser.username;
-
+    document.getElementById("profilePhoto").src = currentUser.photo || DEFAULT_AVATAR;
+    document.getElementById("storyMyAvatar").src = currentUser.photo || DEFAULT_AVATAR;
+    document.getElementById("profileName").textContent = currentUser.username || "usuario";
+    document.getElementById("profileHandle").textContent = "@" + (currentUser.username || "usuario");
 }
-
 
 /* =========================================================
    CREAR PUBLICACIÓN
 ========================================================= */
 
 function openCreatePost(){
-
-    document.getElementById("createOverlay")
-        .classList.add("show");
-
+    document.getElementById("createOverlay").classList.add("show");
 }
 
-
 function previewMedia(event){
-
     const file = event.target.files[0];
-
     if(!file) return;
 
     const image = document.getElementById("imagePreview");
@@ -1263,1511 +1330,789 @@ function previewMedia(event){
     const url = URL.createObjectURL(file);
 
     if(file.type.startsWith("image/")){
-
         image.src = url;
         image.style.display = "block";
-
-    }
-
-    else if(file.type.startsWith("video/")){
-
+    }else if(file.type.startsWith("video/")){
         video.src = url;
         video.style.display = "block";
-
     }
-
 }
 
-
-/* =========================================================
-   CONVERTIR IMAGEN A FORMATO MÁS PEQUEÑO
-   PARA QUE OCUPE MENOS ESPACIO
-========================================================= */
-
 function compressImage(file){
-
     return new Promise((resolve,reject)=>{
-
         const reader = new FileReader();
 
         reader.onload = function(event){
-
             const img = new Image();
 
             img.onload = function(){
-
                 const maxWidth = 1200;
-
                 let width = img.width;
                 let height = img.height;
 
                 if(width > maxWidth){
-
-                    height =
-                        height * maxWidth / width;
-
+                    height = height * maxWidth / width;
                     width = maxWidth;
-
                 }
 
-                const canvas =
-                    document.createElement("canvas");
-
+                const canvas = document.createElement("canvas");
                 canvas.width = width;
                 canvas.height = height;
 
-                const ctx =
-                    canvas.getContext("2d");
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(img,0,0,width,height);
 
-                ctx.drawImage(
-                    img,
-                    0,
-                    0,
-                    width,
-                    height
-                );
-
-                resolve(
-                    canvas.toDataURL(
-                        "image/jpeg",
-                        .82
-                    )
-                );
-
+                canvas.toBlob(blob => {
+                    if(blob) resolve(blob);
+                    else reject(new Error("No se pudo comprimir la imagen."));
+                }, "image/jpeg", .82);
             };
 
             img.onerror = reject;
-
             img.src = event.target.result;
-
         };
 
         reader.onerror = reject;
-
         reader.readAsDataURL(file);
+    });
+}
 
+async function uploadMedia(file, folder){
+    const extension = file.name.includes(".")
+        ? file.name.split(".").pop().toLowerCase()
+        : "bin";
+
+    const path = `${folder}/${currentUser.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${extension}`;
+    const storageRef = ref(storage, path);
+
+    let uploadFile = file;
+    let contentType = file.type;
+
+    if(file.type.startsWith("image/")){
+        uploadFile = await compressImage(file);
+        contentType = "image/jpeg";
+    }
+
+    await uploadBytes(storageRef, uploadFile, {
+        contentType
     });
 
+    const url = await getDownloadURL(storageRef);
+
+    return {
+        url,
+        path,
+        mediaType: file.type.startsWith("video/") ? "video" : "image"
+    };
 }
-
-
-/* =========================================================
-   CREAR POST
-========================================================= */
 
 async function createPost(){
+    if(!currentUser){
+        alert("Espera un momento mientras se conecta Firebase.");
+        return;
+    }
 
-    const input =
-        document.getElementById("mediaInput");
-
-    const file =
-        input.files[0];
-
-    const caption =
-        document.getElementById("captionInput")
-        .value
-        .trim();
+    const input = document.getElementById("mediaInput");
+    const file = input.files[0];
+    const caption = document.getElementById("captionInput").value.trim();
 
     if(!file){
-
         alert("Primero selecciona una foto o video.");
-
         return;
-
     }
+
+    if(file.size > 100 * 1024 * 1024){
+        alert("El archivo es demasiado grande. Usa un archivo de menos de 100 MB.");
+        return;
+    }
+
+    const button = document.querySelector("#createOverlay .primary-btn");
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = "Subiendo...";
 
     try{
+        const uploaded = await uploadMedia(file, "posts");
 
-        let mediaData;
+        await addDoc(collection(db, "posts"), {
+            userId: currentUser.id,
+            username: currentUser.username,
+            userPhoto: currentUser.photo || DEFAULT_AVATAR,
+            media: uploaded.url,
+            storagePath: uploaded.path,
+            mediaType: uploaded.mediaType,
+            caption,
+            likes: 0,
+            reactions: 0,
+            comments: [],
+            viewers: [],
+            createdAt: serverTimestamp()
+        });
 
-        if(file.type.startsWith("image/")){
-
-            mediaData =
-                await compressImage(file);
-
-        }else{
-
-            const reader =
-                new FileReader();
-
-            mediaData =
-                await new Promise((resolve,reject)=>{
-
-                    reader.onload =
-                        () => resolve(reader.result);
-
-                    reader.onerror = reject;
-
-                    reader.readAsDataURL(file);
-
-                });
-
-        }
-
-
-        const post = {
-
-            id:
-                "post-" +
-                Date.now() +
-                "-" +
-                Math.random()
-                .toString(36)
-                .substring(2),
-
-            userId:
-                currentUser.id,
-
-            username:
-                currentUser.username,
-
-            userPhoto:
-                currentUser.photo,
-
-            media:
-                mediaData,
-
-            mediaType:
-                file.type.startsWith("video/")
-                ? "video"
-                : "image",
-
-            caption:
-                caption,
-
-            likes:0,
-
-            reactions:0,
-
-            liked:false,
-
-            reacted:false,
-
-            comments:[],
-
-            views:0,
-
-            viewers:[],
-
-            createdAt:
-                Date.now()
-
-        };
-
-
-        posts.unshift(post);
-
-        saveData();
-
-        document.getElementById("mediaInput").value = "";
-
+        input.value = "";
         document.getElementById("captionInput").value = "";
-
-        document.getElementById("imagePreview").style.display =
-            "none";
-
-        document.getElementById("videoPreview").style.display =
-            "none";
-
+        document.getElementById("imagePreview").style.display = "none";
+        document.getElementById("videoPreview").style.display = "none";
         closeModal("createOverlay");
 
-        renderFeed();
-
-        renderProfile();
-
-    }
-
-    catch(error){
-
+    }catch(error){
         console.error(error);
-
-        alert(
-            "No se pudo guardar el archivo. " +
-            "Si el video es muy grande, intenta con uno más pequeño."
-        );
-
+        alert("No se pudo publicar. Revisa que Firestore y Storage estén activados en Firebase.");
+    }finally{
+        button.disabled = false;
+        button.textContent = originalText;
     }
-
 }
 
-
 /* =========================================================
-   MOSTRAR FEED
+   FEED
 ========================================================= */
 
 function renderFeed(){
+    const feed = document.getElementById("feed");
 
-    const feed =
-        document.getElementById("feed");
+    if(!currentUser){
+        feed.innerHTML = `
+            <div class="empty">
+                <div class="empty-icon">☁️</div>
+                <h2>Conectando...</h2>
+                <p style="margin-top:8px">Conectando con Cube o Dos.</p>
+            </div>`;
+        return;
+    }
 
     if(posts.length === 0){
-
         feed.innerHTML = `
             <div class="empty">
                 <div class="empty-icon">🌊</div>
                 <h2>Aún no hay publicaciones</h2>
-                <p style="margin-top:8px">
-                    Sé la primera persona en publicar algo.
-                </p>
-            </div>
-        `;
-
+                <p style="margin-top:8px">Sé la primera persona en publicar algo.</p>
+            </div>`;
         return;
-
     }
 
-
-    feed.innerHTML =
-        posts.map(post => createPostHTML(post)).join("");
-
-
+    feed.innerHTML = posts.map(createPostHTML).join("");
     startViewTimers();
-
 }
-
-
-/* =========================================================
-   HTML DE CADA POST
-========================================================= */
 
 function createPostHTML(post){
-
-    const likedClass =
-        post.liked ? "liked" : "";
-
-    const reactedClass =
-        post.reacted ? "reacted" : "";
-
-    const isOwner =
-        post.userId === currentUser.id;
-
-
-    const media =
-        post.mediaType === "video"
-
-        ? `
-            <video
-                src="${post.media}"
-                controls
-                playsinline
-                preload="metadata"
-            ></video>
-        `
-
-        : `
-            <img
-                src="${post.media}"
-                alt="Publicación"
-            >
-        `;
-
-
-    const commentsCount =
-        post.comments.length;
-
-
-    const deleteButton =
-        isOwner
-
-        ? `
-            <button
-                class="menu-option danger"
-                onclick="deletePost('${post.id}')"
-            >
-                🗑️ Eliminar publicación
-            </button>
-        `
-
-        : "";
-
+    const liked = Array.isArray(post.likeUserIds) && post.likeUserIds.includes(currentUser?.id);
+    const reacted = Array.isArray(post.reactionUserIds) && post.reactionUserIds.includes(currentUser?.id);
+    const isOwner = post.userId === currentUser?.id;
+    const comments = Array.isArray(post.comments) ? post.comments : [];
+    const media = post.mediaType === "video"
+        ? `<video src="${post.media}" controls playsinline preload="metadata"></video>`
+        : `<img src="${post.media}" alt="Publicación">`;
 
     return `
-
-        <article
-            class="post"
-            data-post-id="${post.id}"
-        >
-
+        <article class="post" data-post-id="${post.id}">
             <div class="post-header">
-
                 <div class="user-info">
-
-                    <img
-                        class="avatar"
-                        src="${post.userPhoto}"
-                    >
-
+                    <img class="avatar" src="${post.userPhoto || DEFAULT_AVATAR}">
                     <div>
-
-                        <div class="username">
-                            ${escapeHTML(post.username)}
-                        </div>
-
-                        <div class="post-time">
-                            ${formatDate(post.createdAt)}
-                        </div>
-
+                        <div class="username">${escapeHTML(post.username || "usuario")}</div>
+                        <div class="post-time">${formatDate(post.createdAt)}</div>
                     </div>
-
                 </div>
-
-                <button
-                    class="post-menu"
-                    onclick="postOptions('${post.id}')"
-                >
-                    •••
-                </button>
-
+                <button class="post-menu" onclick="postOptions('${post.id}')">•••</button>
             </div>
 
-
-            <div
-                class="post-media"
-                data-view-post="${post.id}"
-            >
-
+            <div class="post-media" data-view-post="${post.id}">
                 ${media}
-
             </div>
-
 
             <div class="post-actions">
-
                 <div class="left-actions">
-
-                    <button
-                        class="action ${likedClass}"
-                        onclick="toggleLike('${post.id}')"
-                    >
-                        ${post.liked ? "♥" : "♡"}
+                    <button class="action ${liked ? "liked" : ""}" onclick="toggleLike('${post.id}')">
+                        ${liked ? "♥" : "♡"}
                     </button>
-
-                    <button
-                        class="action ${reactedClass}"
-                        onclick="toggleReaction('${post.id}')"
-                    >
+                    <button class="action ${reacted ? "reacted" : ""}" onclick="toggleReaction('${post.id}')">
                         👍
                     </button>
-
-                    <button
-                        class="action"
-                        onclick="openComments('${post.id}')"
-                    >
-                        ♧
-                    </button>
-
+                    <button class="action" onclick="openComments('${post.id}')">♧</button>
                 </div>
-
-                <button
-                    class="action"
-                    onclick="sharePost('${post.id}')"
-                >
-                    ↗
-                </button>
-
+                <button class="action" onclick="sharePost('${post.id}')">↗</button>
             </div>
-
 
             <div class="post-body">
-
                 <div class="likes">
-                    ${post.likes} me gusta ·
-                    ${post.reactions} reacciones
+                    ${post.likes || 0} me gusta · ${post.reactions || 0} reacciones
                 </div>
 
-                ${
-                    post.caption
+                ${post.caption ? `
+                    <div class="caption">
+                        <strong>${escapeHTML(post.username || "usuario")}</strong>
+                        ${escapeHTML(post.caption)}
+                    </div>` : ""}
 
-                    ? `
-                        <div class="caption">
-                            <strong>
-                                ${escapeHTML(post.username)}
-                            </strong>
-                            ${escapeHTML(post.caption)}
-                        </div>
-                    `
+                ${comments.length > 0 ? `
+                    <div class="comments-link" onclick="openComments('${post.id}')">
+                        Ver ${comments.length} comentario${comments.length === 1 ? "" : "s"}
+                    </div>` : `
+                    <div class="comments-link" onclick="openComments('${post.id}')">
+                        Añadir comentario...
+                    </div>`}
 
-                    : ""
-                }
-
-
-                ${
-                    commentsCount > 0
-
-                    ? `
-                        <div
-                            class="comments-link"
-                            onclick="openComments('${post.id}')"
-                        >
-                            Ver ${commentsCount}
-                            comentario${commentsCount === 1 ? "" : "s"}
-                        </div>
-                    `
-
-                    : `
-                        <div
-                            class="comments-link"
-                            onclick="openComments('${post.id}')"
-                        >
-                            Añadir comentario...
-                        </div>
-                    `
-                }
-
-
-                <div class="view-counter">
-                    👁️ ${post.views} vistas
-                </div>
-
+                <div class="view-counter">👁️ ${post.views || 0} vistas</div>
             </div>
-
-        </article>
-    `;
-
+        </article>`;
 }
-
 
 /* =========================================================
-   ME GUSTA
+   ME GUSTA Y REACCIONES — POR USUARIO
 ========================================================= */
 
-function toggleLike(id){
+async function toggleLike(id){
+    if(!currentUser) return;
+    const postRef = doc(db,"posts",id);
 
-    const post =
-        posts.find(p => p.id === id);
+    try{
+        await runTransaction(db, async transaction => {
+            const snap = await transaction.get(postRef);
+            if(!snap.exists()) return;
 
-    if(!post) return;
+            const data = snap.data();
+            const ids = Array.isArray(data.likeUserIds) ? data.likeUserIds : [];
+            const already = ids.includes(currentUser.id);
 
-    post.liked = !post.liked;
-
-    post.likes +=
-        post.liked ? 1 : -1;
-
-    if(post.likes < 0)
-        post.likes = 0;
-
-    saveData();
-
-    renderFeed();
-
+            transaction.update(postRef, {
+                likeUserIds: already ? arrayRemove(currentUser.id) : arrayUnion(currentUser.id),
+                likes: increment(already ? -1 : 1)
+            });
+        });
+    }catch(error){
+        console.error(error);
+    }
 }
 
+async function toggleReaction(id){
+    if(!currentUser) return;
+    const postRef = doc(db,"posts",id);
 
-/* =========================================================
-   REACCIÓN 👍
-========================================================= */
+    try{
+        await runTransaction(db, async transaction => {
+            const snap = await transaction.get(postRef);
+            if(!snap.exists()) return;
 
-function toggleReaction(id){
+            const data = snap.data();
+            const ids = Array.isArray(data.reactionUserIds) ? data.reactionUserIds : [];
+            const already = ids.includes(currentUser.id);
 
-    const post =
-        posts.find(p => p.id === id);
-
-    if(!post) return;
-
-    post.reacted =
-        !post.reacted;
-
-    post.reactions +=
-        post.reacted ? 1 : -1;
-
-    if(post.reactions < 0)
-        post.reactions = 0;
-
-    saveData();
-
-    renderFeed();
-
+            transaction.update(postRef, {
+                reactionUserIds: already ? arrayRemove(currentUser.id) : arrayUnion(currentUser.id),
+                reactions: increment(already ? -1 : 1)
+            });
+        });
+    }catch(error){
+        console.error(error);
+    }
 }
-
 
 /* =========================================================
    COMENTARIOS
 ========================================================= */
 
 function openComments(id){
-
     currentCommentPostId = id;
-
-    const post =
-        posts.find(p => p.id === id);
-
+    const post = posts.find(p => p.id === id);
     if(!post) return;
 
-    const list =
-        document.getElementById("commentList");
+    const list = document.getElementById("commentList");
+    const comments = Array.isArray(post.comments) ? post.comments : [];
 
-    if(post.comments.length === 0){
-
-        list.innerHTML = `
-            <div class="empty" style="padding:30px">
-                Todavía no hay comentarios.
-            </div>
-        `;
-
+    if(comments.length === 0){
+        list.innerHTML = `<div class="empty" style="padding:30px">Todavía no hay comentarios.</div>`;
     }else{
-
-        list.innerHTML =
-            post.comments.map(comment => `
-
-                <div class="comment">
-
-                    <img
-                        class="comment-avatar"
-                        src="${comment.photo}"
-                    >
-
-                    <div class="comment-content">
-
-                        <strong>
-                            ${escapeHTML(comment.username)}
-                        </strong>
-
-                        <p>
-                            ${escapeHTML(comment.text)}
-                        </p>
-
-                    </div>
-
+        list.innerHTML = comments.map(comment => `
+            <div class="comment">
+                <img class="comment-avatar" src="${comment.photo || DEFAULT_AVATAR}">
+                <div class="comment-content">
+                    <strong>${escapeHTML(comment.username || "usuario")}</strong>
+                    <p>${escapeHTML(comment.text || "")}</p>
                 </div>
-
-            `).join("");
-
+            </div>`).join("");
     }
 
-    document.getElementById("commentsOverlay")
-        .classList.add("show");
-
+    document.getElementById("commentsOverlay").classList.add("show");
 }
 
+async function addComment(){
+    if(!currentUser) return;
 
-function addComment(){
+    const input = document.getElementById("commentInput");
+    const text = input.value.trim();
+    if(!text || !currentCommentPostId) return;
 
-    const input =
-        document.getElementById("commentInput");
+    try{
+        await updateDoc(doc(db,"posts",currentCommentPostId), {
+            comments: arrayUnion({
+                id: currentUser.id + "-" + Date.now(),
+                username: currentUser.username,
+                photo: currentUser.photo || DEFAULT_AVATAR,
+                text,
+                createdAt: Date.now()
+            })
+        });
 
-    const text =
-        input.value.trim();
-
-    if(!text) return;
-
-    const post =
-        posts.find(
-            p => p.id === currentCommentPostId
-        );
-
-    if(!post) return;
-
-    post.comments.push({
-
-        username:
-            currentUser.username,
-
-        photo:
-            currentUser.photo,
-
-        text:
-            text,
-
-        createdAt:
-            Date.now()
-
-    });
-
-    input.value = "";
-
-    saveData();
-
-    openComments(currentCommentPostId);
-
-    renderFeed();
-
-}
-
-
-/* =========================================================
-   ELIMINAR POST
-========================================================= */
-
-function deletePost(id){
-
-    const post =
-        posts.find(p => p.id === id);
-
-    if(!post) return;
-
-
-    if(post.userId !== currentUser.id){
-
-        alert(
-            "Solo la persona que creó la publicación puede eliminarla."
-        );
-
-        return;
-
+        input.value = "";
+    }catch(error){
+        console.error(error);
+        alert("No se pudo agregar el comentario.");
     }
-
-
-    const confirmDelete =
-        confirm(
-            "¿Quieres eliminar esta publicación?"
-        );
-
-    if(!confirmDelete) return;
-
-
-    posts =
-        posts.filter(
-            p => p.id !== id
-        );
-
-    saveData();
-
-    renderFeed();
-
-    renderProfile();
-
 }
 
-
 /* =========================================================
-   MENÚ DE POST
-========================================================= */
-
-function postOptions(id){
-
-    const post =
-        posts.find(p => p.id === id);
-
-    if(!post) return;
-
-    if(post.userId === currentUser.id){
-
-        if(confirm("¿Eliminar esta publicación?")){
-
-            deletePost(id);
-
-        }
-
-    }else{
-
-        alert(
-            "Opciones: puedes comentar, reaccionar o compartir esta publicación."
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   VISTAS DE 5 SEGUNDOS
+   VISTAS
 ========================================================= */
 
 function startViewTimers(){
-
-    const elements =
-        document.querySelectorAll(
-            "[data-view-post]"
-        );
-
-
-    elements.forEach(element => {
-
-        const id =
-            element.dataset.viewPost;
-
-
+    document.querySelectorAll("[data-view-post]").forEach(element => {
+        const id = element.dataset.viewPost;
         let timerStarted = false;
 
-
-        const observer =
-            new IntersectionObserver(
-                entries => {
-
-                    entries.forEach(entry => {
-
-                        if(
-                            entry.isIntersecting &&
-                            !timerStarted
-                        ){
-
-                            timerStarted = true;
-
-                            setTimeout(
-                                () => registerView(id),
-                                5000
-                            );
-
-                        }
-
-                    });
-
-                },
-                {
-                    threshold:.6
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if(entry.isIntersecting && !timerStarted){
+                    timerStarted = true;
+                    setTimeout(() => registerView(id),5000);
                 }
-            );
-
+            });
+        }, {threshold:.6});
 
         observer.observe(element);
-
     });
-
 }
 
+async function registerView(id){
+    if(!currentUser) return;
+    const postRef = doc(db,"posts",id);
+
+    try{
+        await runTransaction(db, async transaction => {
+            const snap = await transaction.get(postRef);
+            if(!snap.exists()) return;
+
+            const data = snap.data();
+            const viewers = Array.isArray(data.viewers) ? data.viewers : [];
+
+            if(viewers.includes(currentUser.id)) return;
+
+            transaction.update(postRef, {
+                viewers: arrayUnion(currentUser.id),
+                views: increment(1)
+            });
+        });
+    }catch(error){
+        console.error(error);
+    }
+}
 
 /* =========================================================
-   REGISTRAR VISTA
+   ELIMINAR PUBLICACIÓN
 ========================================================= */
 
-function registerView(id){
-
-    const post =
-        posts.find(p => p.id === id);
-
+async function deletePost(id){
+    const post = posts.find(p => p.id === id);
     if(!post) return;
 
-
-    /*
-       La misma persona no genera otra vista
-       para la misma publicación.
-    */
-
-    if(
-        post.viewers &&
-        post.viewers.includes(currentUser.id)
-    ){
-
+    if(post.userId !== currentUser?.id){
+        alert("Solo la persona que creó la publicación puede eliminarla.");
         return;
-
     }
 
+    if(!confirm("¿Quieres eliminar esta publicación?")) return;
 
-    if(!post.viewers)
-        post.viewers = [];
+    try{
+        await deleteDoc(doc(db,"posts",id));
 
-
-    post.viewers.push(
-        currentUser.id
-    );
-
-    post.views++;
-
-    saveData();
-
-    renderFeed();
-
+        if(post.storagePath){
+            try{
+                await deleteObject(ref(storage,post.storagePath));
+            }catch(storageError){
+                console.warn("El documento se eliminó, pero el archivo de Storage no pudo eliminarse.", storageError);
+            }
+        }
+    }catch(error){
+        console.error(error);
+        alert("No se pudo eliminar la publicación.");
+    }
 }
 
+function postOptions(id){
+    const post = posts.find(p => p.id === id);
+    if(!post) return;
+
+    if(post.userId === currentUser?.id){
+        deletePost(id);
+    }else{
+        alert("Opciones: puedes comentar, reaccionar o compartir esta publicación.");
+    }
+}
 
 /* =========================================================
    CAMBIAR FOTO DE PERFIL
 ========================================================= */
 
 function changeProfilePhoto(){
-
     closeModal("profileMenuOverlay");
-
     document.getElementById("profileInput").click();
-
 }
 
-
 async function saveProfilePhoto(event){
-
-    const file =
-        event.target.files[0];
-
-    if(!file) return;
-
+    const file = event.target.files[0];
+    if(!file || !currentUser) return;
 
     if(!file.type.startsWith("image/")){
-
         alert("Selecciona una imagen.");
-
         return;
-
     }
 
-
     try{
+        const uploaded = await uploadMedia(file,"profiles");
+        const oldPhoto = currentUser.photo;
 
-        const image =
-            await compressImage(file);
-
-        currentUser.photo =
-            image;
-
-
-        /*
-           También actualizamos la foto
-           que aparece en publicaciones antiguas.
-        */
-
-        posts.forEach(post => {
-
-            if(post.userId === currentUser.id){
-
-                post.userPhoto =
-                    image;
-
-            }
-
+        await updateDoc(doc(db,"users",currentUser.id), {
+            photo: uploaded.url
         });
 
+        currentUser.photo = uploaded.url;
 
-        saveData();
+        /* Actualiza las publicaciones del usuario para que su foto cambie también. */
+        const ownPosts = posts.filter(p => p.userId === currentUser.id);
+        await Promise.all(ownPosts.map(p =>
+            updateDoc(doc(db,"posts",p.id),{userPhoto:uploaded.url})
+        ));
 
         updateUserInterface();
 
-        renderFeed();
-
-        renderProfile();
-
+        /* No borramos la foto anterior automáticamente porque puede estar en caché. */
+        void oldPhoto;
+    }catch(error){
+        console.error(error);
+        alert("No se pudo cambiar la foto de perfil.");
+    }finally{
+        event.target.value = "";
     }
-
-    catch(error){
-
-        alert(
-            "No se pudo cambiar la foto."
-        );
-
-    }
-
 }
 
-
 /* =========================================================
-   CAMBIAR NOMBRE
+   CAMBIAR NOMBRE DE USUARIO
 ========================================================= */
 
 function changeUsername(){
-
     closeModal("profileMenuOverlay");
-
-    document.getElementById("usernameInput").value =
-        currentUser.username;
-
-    document.getElementById("usernameOverlay")
-        .classList.add("show");
-
+    document.getElementById("usernameInput").value = currentUser.username;
+    document.getElementById("usernameOverlay").classList.add("show");
 }
 
-
-function saveUsername(){
-
-    let name =
-        document.getElementById("usernameInput")
-        .value
-        .trim()
-        .replace(/\s+/g,"_");
-
+async function saveUsername(){
+    let name = document.getElementById("usernameInput").value.trim().replace(/\s+/g,"_");
 
     if(name.length < 3){
-
-        alert(
-            "El nombre debe tener al menos 3 caracteres."
-        );
-
+        alert("El nombre debe tener al menos 3 caracteres.");
         return;
-
     }
 
+    name = name.substring(0,25);
 
-    currentUser.username =
-        name.substring(0,25);
+    try{
+        await updateDoc(doc(db,"users",currentUser.id), {
+            username: name
+        });
 
+        currentUser.username = name;
 
-    posts.forEach(post => {
+        const ownPosts = posts.filter(p => p.userId === currentUser.id);
+        await Promise.all(ownPosts.map(p =>
+            updateDoc(doc(db,"posts",p.id),{username:name})
+        ));
 
-        if(post.userId === currentUser.id){
-
-            post.username =
-                currentUser.username;
-
-        }
-
-    });
-
-
-    saveData();
-
-    updateUserInterface();
-
-    renderFeed();
-
-    renderProfile();
-
-    closeModal("usernameOverlay");
-
+        updateUserInterface();
+        renderProfile();
+        closeModal("usernameOverlay");
+    }catch(error){
+        console.error(error);
+        alert("No se pudo cambiar el nombre.");
+    }
 }
-
 
 /* =========================================================
    PERFIL
 ========================================================= */
 
 function renderProfile(){
+    if(!currentUser) return;
 
-    const myPosts =
-        posts.filter(
-            post =>
-                post.userId === currentUser.id
-        );
+    const myPosts = posts.filter(post => post.userId === currentUser.id);
+    document.getElementById("postCount").textContent = myPosts.length;
 
-
-    document.getElementById("postCount")
-        .textContent =
-        myPosts.length;
-
-
-    const grid =
-        document.getElementById("profileGrid");
-
+    const grid = document.getElementById("profileGrid");
 
     if(myPosts.length === 0){
-
         grid.innerHTML = "";
-
         return;
-
     }
 
-
-    grid.innerHTML =
-        myPosts.map(post => `
-
-            <div
-                class="grid-item"
-                onclick="scrollToPost('${post.id}')"
-            >
-
-                ${
-                    post.mediaType === "video"
-
-                    ? `
-                        <video
-                            src="${post.media}"
-                        ></video>
-
-                        <div class="grid-video">
-                            ▶
-                        </div>
-                    `
-
-                    : `
-                        <img
-                            src="${post.media}"
-                        >
-                    `
-                }
-
-            </div>
-
-        `).join("");
-
+    grid.innerHTML = myPosts.map(post => `
+        <div class="grid-item" onclick="scrollToPost('${post.id}')">
+            ${post.mediaType === "video"
+                ? `<video src="${post.media}"></video><div class="grid-video">▶</div>`
+                : `<img src="${post.media}">`}
+        </div>`).join("");
 }
-
 
 /* =========================================================
    NAVEGACIÓN
 ========================================================= */
 
 function hideAllPages(){
-
-    document.getElementById("homePage")
-        .style.display = "none";
-
-    document.getElementById("searchPage")
-        .style.display = "none";
-
-    document.getElementById("notificationsPage")
-        .style.display = "none";
-
-    document.getElementById("profilePage")
-        .style.display = "none";
-
+    document.getElementById("homePage").style.display = "none";
+    document.getElementById("searchPage").style.display = "none";
+    document.getElementById("notificationsPage").style.display = "none";
+    document.getElementById("profilePage").style.display = "none";
 }
-
 
 function showHome(){
-
     hideAllPages();
-
-    document.getElementById("homePage")
-        .style.display = "block";
-
+    document.getElementById("homePage").style.display = "block";
     setActiveNav(0);
-
     renderFeed();
-
 }
-
 
 function showProfile(){
-
     hideAllPages();
-
-    document.getElementById("profilePage")
-        .style.display = "block";
-
+    document.getElementById("profilePage").style.display = "block";
     setActiveNav(4);
-
     renderProfile();
-
 }
-
 
 function openSearch(){
-
     hideAllPages();
-
-    document.getElementById("searchPage")
-        .style.display = "block";
-
+    document.getElementById("searchPage").style.display = "block";
     setActiveNav(1);
-
-    document.getElementById("searchInput")
-        .focus();
-
+    document.getElementById("searchInput").focus();
 }
-
 
 function openNotifications(){
-
     hideAllPages();
-
-    document.getElementById("notificationsPage")
-        .style.display = "block";
-
+    document.getElementById("notificationsPage").style.display = "block";
     setActiveNav(3);
-
     renderNotifications();
-
 }
 
-
-function closePages(){
-
-    showHome();
-
-}
-
+function closePages(){ showHome(); }
 
 function setActiveNav(index){
-
-    const buttons =
-        document.querySelectorAll(".nav-item");
-
-    buttons.forEach(
-        b => b.classList.remove("active")
-    );
-
-    if(buttons[index])
-        buttons[index].classList.add("active");
-
+    const buttons = document.querySelectorAll(".nav-item");
+    buttons.forEach(b => b.classList.remove("active"));
+    if(buttons[index]) buttons[index].classList.add("active");
 }
-
 
 /* =========================================================
    BÚSQUEDA
+   Se mantiene la búsqueda visual existente.
 ========================================================= */
 
 function searchUsers(){
+    const queryText = document.getElementById("searchInput").value.toLowerCase().trim();
 
-    const query =
-        document.getElementById("searchInput")
-        .value
-        .toLowerCase()
-        .trim();
-
-
-    const users = [
-
-        {
-            username:"ana_crea",
-            photo:"https://i.pravatar.cc/100?img=12"
-        },
-
-        {
-            username:"mateo_social",
-            photo:"https://i.pravatar.cc/100?img=32"
-        },
-
-        {
-            username:"sofia_art",
-            photo:"https://i.pravatar.cc/100?img=47"
-        },
-
-        {
-            username:"lucas_fotos",
-            photo:"https://i.pravatar.cc/100?img=5"
-        }
-
+    const demoUsers = [
+        {username:"ana_crea",photo:"https://i.pravatar.cc/100?img=12"},
+        {username:"mateo_social",photo:"https://i.pravatar.cc/100?img=32"},
+        {username:"sofia_art",photo:"https://i.pravatar.cc/100?img=47"},
+        {username:"lucas_fotos",photo:"https://i.pravatar.cc/100?img=5"}
     ];
 
+    if(currentUser){
+        demoUsers.unshift({username:currentUser.username,photo:currentUser.photo});
+    }
 
-    const ownUser = {
-
-        username:
-            currentUser.username,
-
-        photo:
-            currentUser.photo
-
-    };
-
-
-    users.unshift(ownUser);
-
-
-    const results =
-        users.filter(
-            user =>
-                user.username
-                .toLowerCase()
-                .includes(query)
-        );
-
-
-    document.getElementById("searchResults")
-        .innerHTML =
-
-        results.map(user => `
-
+    document.getElementById("searchResults").innerHTML = demoUsers
+        .filter(user => user.username.toLowerCase().includes(queryText))
+        .map(user => `
             <div class="search-result">
-
                 <img src="${user.photo}">
-
-                <strong>
-                    @${escapeHTML(user.username)}
-                </strong>
-
-            </div>
-
-        `).join("");
-
-
+                <strong>@${escapeHTML(user.username)}</strong>
+            </div>`).join("");
 }
-
 
 /* =========================================================
    NOTIFICACIONES
 ========================================================= */
 
 function renderNotifications(){
-
-    const list =
-        document.getElementById("notificationsList");
-
-
-    list.innerHTML = `
-
-        <div class="notification">
-            💙 Bienvenido a Brisa+.
-        </div>
-
-        <div class="notification">
-            📸 Puedes crear una publicación desde tu galería.
-        </div>
-
-        <div class="notification">
-            👁️ Una publicación cuenta una vista
-            después de 5 segundos.
-        </div>
-
+    document.getElementById("notificationsList").innerHTML = `
+        <div class="notification">💙 Bienvenido a Cube o Dos.</div>
+        <div class="notification">📸 Puedes crear una publicación desde tu galería.</div>
+        <div class="notification">☁️ Tus publicaciones ahora se guardan en Firebase y pueden verse desde otros dispositivos.</div>
+        <div class="notification">👁️ Una publicación cuenta una vista después de 5 segundos.</div>
     `;
-
 }
-
 
 /* =========================================================
    AJUSTES
 ========================================================= */
 
 function openProfileMenu(){
-
-    document.getElementById("profileMenuOverlay")
-        .classList.add("show");
-
+    document.getElementById("profileMenuOverlay").classList.add("show");
 }
-
 
 function openSettings(){
-
     closeModal("profileMenuOverlay");
-
-    document.getElementById("settingsOverlay")
-        .classList.add("show");
-
+    document.getElementById("settingsOverlay").classList.add("show");
 }
-
 
 function toggleDarkMode(){
-
     document.body.classList.toggle("dark");
-
-    localStorage.setItem(
-        "brisaDarkMode",
-        document.body.classList.contains("dark")
-    );
-
+    localStorage.setItem("brisaDarkMode",document.body.classList.contains("dark"));
 }
-
 
 function loadDarkMode(){
-
-    if(
-        localStorage.getItem("brisaDarkMode")
-        === "true"
-    ){
-
+    if(localStorage.getItem("brisaDarkMode") === "true"){
         document.body.classList.add("dark");
-
     }
-
 }
 
-
 /* =========================================================
-   HISTORIAS - BASE
+   HISTORIAS — BASE
 ========================================================= */
 
 function openStoryUpload(){
-
-    alert(
-        "La función de historias está preparada para conectarse con almacenamiento de archivos. En esta versión puedes publicar fotos y videos desde Crear."
-    );
-
+    alert("Las historias todavía son una función de base. Las publicaciones normales ya se guardan en Firebase para todos los usuarios.");
 }
-
 
 /* =========================================================
    COMPARTIR
 ========================================================= */
 
 async function sharePost(id){
-
-    const post =
-        posts.find(p => p.id === id);
-
+    const post = posts.find(p => p.id === id);
     if(!post) return;
 
-
-    if(
-        navigator.share
-    ){
-
+    if(navigator.share){
         try{
-
             await navigator.share({
-
-                title:"Brisa+",
-
-                text:
-                    post.caption ||
-                    "Mira esta publicación"
-
+                title:"Cube o Dos",
+                text:post.caption || "Mira esta publicación"
             });
-
+        }catch(error){}
+    }else{
+        try{
+            await navigator.clipboard.writeText(location.href);
+            alert("Enlace copiado.");
+        }catch(error){
+            alert("La función compartir no está disponible en este dispositivo.");
         }
-
-        catch(error){}
-
     }
-
-    else{
-
-        alert(
-            "La función compartir está disponible en dispositivos compatibles."
-        );
-
-    }
-
 }
-
 
 /* =========================================================
    SCROLL A POST
 ========================================================= */
 
 function scrollToPost(id){
-
     showHome();
-
-    setTimeout(()=>{
-
-        const element =
-            document.querySelector(
-                `[data-post-id="${id}"]`
-            );
-
-        if(element){
-
-            element.scrollIntoView({
-                behavior:"smooth"
-            });
-
-        }
-
+    setTimeout(() => {
+        const element = document.querySelector(`[data-post-id="${id}"]`);
+        if(element) element.scrollIntoView({behavior:"smooth"});
     },100);
-
 }
 
-
 /* =========================================================
-   CERRAR MODALES
+   MODALES
 ========================================================= */
 
 function closeModal(id){
-
-    document.getElementById(id)
-        .classList.remove("show");
-
+    document.getElementById(id).classList.remove("show");
 }
 
-
 /* =========================================================
-   ESCAPAR HTML
+   SEGURIDAD HTML
 ========================================================= */
 
 function escapeHTML(text){
-
-    return String(text)
+    return String(text ?? "")
         .replace(/&/g,"&amp;")
         .replace(/</g,"&lt;")
         .replace(/>/g,"&gt;")
         .replace(/"/g,"&quot;")
         .replace(/'/g,"&#039;");
-
 }
 
-
 /* =========================================================
-   FECHA
+   FECHA DE FIRESTORE
 ========================================================= */
 
 function formatDate(timestamp){
+    let time = Date.now();
 
-    const diff =
-        Date.now() - timestamp;
+    if(timestamp?.toDate){
+        time = timestamp.toDate().getTime();
+    }else if(typeof timestamp === "number"){
+        time = timestamp;
+    }
 
+    const diff = Math.max(0,Date.now() - time);
+    const seconds = Math.floor(diff/1000);
 
-    const seconds =
-        Math.floor(diff / 1000);
+    if(seconds < 60) return "Ahora";
 
-    if(seconds < 60)
-        return "Ahora";
+    const minutes = Math.floor(seconds/60);
+    if(minutes < 60) return `Hace ${minutes} min`;
 
+    const hours = Math.floor(minutes/60);
+    if(hours < 24) return `Hace ${hours} h`;
 
-    const minutes =
-        Math.floor(seconds / 60);
-
-    if(minutes < 60)
-        return `Hace ${minutes} min`;
-
-
-    const hours =
-        Math.floor(minutes / 60);
-
-    if(hours < 24)
-        return `Hace ${hours} h`;
-
-
-    const days =
-        Math.floor(hours / 24);
-
+    const days = Math.floor(hours/24);
     return `Hace ${days} día${days === 1 ? "" : "s"}`;
-
 }
 
-
 /* =========================================================
-   BORRAR DATOS
+   BORRAR DATOS LOCALES
+   Las publicaciones ya no dependen de localStorage.
 ========================================================= */
 
 function clearLocalData(){
-
-    const confirmation =
-        confirm(
-            "Esto eliminará las publicaciones y el perfil guardados en este navegador. ¿Continuar?"
-        );
-
-
-    if(!confirmation)
-        return;
-
-
-    localStorage.removeItem("brisaUser");
-
-    localStorage.removeItem("brisaPosts");
+    if(!confirm("Esto solo eliminará preferencias locales de este navegador. Las publicaciones de Firebase NO se eliminarán. ¿Continuar?")) return;
 
     localStorage.removeItem("brisaDarkMode");
-
     location.reload();
-
 }
 
-
 /* =========================================================
-   CERRAR MODAL AL TOCAR FUERA
+   EVENTOS DE LOS MODALES
 ========================================================= */
 
-document.querySelectorAll(".overlay")
-.forEach(overlay => {
-
-    overlay.addEventListener(
-        "click",
-        function(event){
-
-            if(event.target === overlay){
-
-                overlay.classList.remove("show");
-
-            }
-
+document.querySelectorAll(".overlay").forEach(overlay => {
+    overlay.addEventListener("click",function(event){
+        if(event.target === overlay){
+            overlay.classList.remove("show");
         }
-    );
-
+    });
 });
 
-
-/* =========================================================
-   ENTER PARA COMENTAR
-========================================================= */
-
-document.getElementById("commentInput")
-.addEventListener("keydown",function(event){
-
-    if(
-        event.key === "Enter" &&
-        !event.shiftKey
-    ){
-
+document.getElementById("commentInput").addEventListener("keydown",function(event){
+    if(event.key === "Enter" && !event.shiftKey){
         event.preventDefault();
-
         addComment();
-
     }
-
 });
 
-
-/* =========================================================
-   ENTER PARA NOMBRE
-========================================================= */
-
-document.getElementById("usernameInput")
-.addEventListener("keydown",function(event){
-
+document.getElementById("usernameInput").addEventListener("keydown",function(event){
     if(event.key === "Enter"){
-
         event.preventDefault();
-
         saveUsername();
-
     }
+});
 
+/* Exponer funciones usadas por onclick del HTML. */
+Object.assign(window, {
+    openStoryUpload, openCreatePost, previewMedia, createPost,
+    openProfileMenu, changeProfilePhoto, changeUsername, openSettings,
+    toggleDarkMode, closeModal, saveProfilePhoto, saveUsername,
+    openComments, addComment, toggleLike, toggleReaction, postOptions,
+    deletePost, sharePost, scrollToPost, showHome, showProfile,
+    openSearch, openNotifications, closePages, searchUsers, clearLocalData
 });
 
 </script>
